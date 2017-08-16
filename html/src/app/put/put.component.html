@@ -1,0 +1,14 @@
+<div>
+	<h2>Search</h2>
+	<form #f="ngForm"
+		(ngSubmit) = "onSubmit(f.value)">
+		<div>
+			<label for="tweet">Tweet</label>
+			<textarea id="tweet" placeholder="Tweet" name="tweet" ngModel></textarea>
+		</div>
+		<div>
+			<label for="metadata">Metadata</label>
+			<textarea id="metadata" placeholder="Metadata" name="metadata" ngModel></textarea>
+		</div>
+	</form>
+</div>
