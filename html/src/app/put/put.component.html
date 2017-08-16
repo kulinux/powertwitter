@@ -1,14 +1,16 @@
-<div>
-	<h2>Search</h2>
+<div class="container">
 	<form #f="ngForm"
 		(ngSubmit) = "onSubmit(f.value)">
-		<div>
+		<div class="form-group">
 			<label for="tweet">Tweet</label>
-			<textarea id="tweet" placeholder="Tweet" name="tweet" ngModel></textarea>
+			<textarea id="tweet" placeholder="Tweet" name="tweet" class="form-control" ngModel></textarea>
 		</div>
-		<div>
+		<div class="form-group">
 			<label for="metadata">Metadata</label>
-			<textarea id="metadata" placeholder="Metadata" name="metadata" ngModel></textarea>
+			<textarea id="metadata" placeholder="Metadata" name="metadata"  class="form-control" ngModel></textarea>
+		</div>
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary"/>
 		</div>
 	</form>
 </div>
