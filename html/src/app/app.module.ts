@@ -5,6 +5,7 @@ import { AppComponent } from './app.component';
 import { PutComponent } from './put/put.component';
 import { SearchComponent } from './search/search.component';
 
+import { HttpModule } from '@angular/http';
 
 import {
   FormsModule,
@@ -20,7 +21,8 @@ import {
   imports: [
     BrowserModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    HttpModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,5 +1,27 @@
 <div class="container">
-	<p>
-		search works!
-	</p>
+	<h3>Search</h3>
+	<form #f="ngForm"
+		(ngSubmit) = "onSubmit(f.value)">
+		<div class="form-group">
+			<label for="metadata">Metadata</label>
+			<textarea id="metadata" placeholder="Metadata" name="metadata"  class="form-control" ngModel></textarea>
+		</div>
+		<div class="form-group">
+			<input type="submit" class="btn btn-primary"/>
+		</div>
+		<div>
+			<table class="table table-hover" *ngIf="searchResult.length > 0">
+				<thead>
+					<tr>
+						<th>Id</th>
+						<th>Name</th>
+					</tr>
+				</thead>
+				<tr *ngFor="let item of searchResult">
+					<td>{{item.id}}</td>
+					<td>{{item.name}}</td>
+				</tr>
+			</table>
+		</div>
+	</form>
 </div>
