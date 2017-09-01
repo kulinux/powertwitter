@@ -20,7 +20,7 @@ export class PutComponent implements OnInit {
 
   makeRequest(form) {
   	this.http.put(
-  		'http://localhost:4200/twitter/tweets/1',
+  		'http://localhost:9000/v1/posts',
   		JSON.stringify('kkkkkkk')
   	)
   	.subscribe((res: Response) => {
