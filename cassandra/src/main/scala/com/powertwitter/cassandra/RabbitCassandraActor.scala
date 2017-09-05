@@ -39,27 +39,6 @@ class RabbitCassandraActor extends Actor {
         bufferSize = 1
     ).runWith(Sink.foreach( x => println(x.bytes.utf8String) ) )
 
-
-
-
-    /*
-    val fanoutSize = 4
-
-    val mergedSources = (0 until fanoutSize).foldLeft(Source.empty[(Int, String)]) {
-      case (source, fanoutBranch) =>
-        source.merge(
-          AmqpSource(
-            TemporaryQueueSourceSettings(
-              DefaultAmqpConnection,
-              exchangeName
-            ).withDeclarations(exchangeDeclaration),
-            bufferSize = 1
-          ).map(msg => (fanoutBranch, msg.bytes.utf8String))
-        )
-    }
-    */
-
-
   }
 
 

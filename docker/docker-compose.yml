@@ -1,0 +1,23 @@
+version: '3'
+services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+     - "8080:15672"
+     - "5671:5671"
+     - "5672:5672"
+    build:
+      context: rabbitmq/.
+      args:
+        --hostname: my-rabbit
+        --name: some-rabbit
+
+  cassandra:
+    image: "cassandra"
+    ports:
+     - "9042:9042"
+    build:
+      context: cassandra/.
+      args:
+        --name: some-cassandra
+
