@@ -1,10 +1,10 @@
-package com.powertwitter.cassandra
+package com.powertwitter.cassandra.rabbit
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.amqp._
 import akka.stream.alpakka.amqp.scaladsl.{AmqpSink, AmqpSource}
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.Sink
 
 
 object RabbitCassandraActor {
