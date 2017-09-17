@@ -9,9 +9,11 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import play.api.libs.json.{JsValue, Json, Writes}
 import rabbitmq.RabbitActor.exchangeName
-import v1.twitter.{TwitterData, TwitterId, TwitterResource}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+
+import com.powertwitter.model._
+
 
 object RabbitActor {
   val exchangeName = "powertwitter"

@@ -6,6 +6,8 @@ import play.api.MarkerContext
 
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json._
+import com.powertwitter.model._
+
 
 /**
   * DTO for displaying post information.

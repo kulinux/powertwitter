@@ -19,9 +19,10 @@ export class PutComponent implements OnInit {
   }
 
   makeRequest(form) {
-  	this.http.put(
+    console.log(form)
+  	this.http.post(
   		'http://localhost:9000/v1/posts',
-  		JSON.stringify('kkkkkkk')
+  		JSON.stringify(form)
   	)
   	.subscribe((res: Response) => {
   		//this.data = res.json();

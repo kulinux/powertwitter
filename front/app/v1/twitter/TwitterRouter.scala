@@ -6,6 +6,9 @@ import play.api.routing.Router.Routes
 import play.api.routing.SimpleRouter
 import play.api.routing.sird._
 
+import com.powertwitter.model._
+
+
 /**
   * Routes and URLs to the PostResource controller.
   */

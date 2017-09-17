@@ -12,5 +12,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
   "org.scalatest" %% "scalatest" % "3.0.1" % "test",
   "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.10",
-  "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.11"
+  "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.11",
+  "com.powertwitter" %% "model" % "0.1.0-SNAPSHOT"
 )

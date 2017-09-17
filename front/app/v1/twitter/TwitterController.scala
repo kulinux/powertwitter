@@ -24,8 +24,8 @@ class TwitterController @Inject()(cc: PostControllerComponents)(implicit ec: Exe
 
     Form(
       mapping(
-        "title" -> nonEmptyText,
-        "body" -> text
+        "tweet" -> nonEmptyText,
+        "metadata" -> text
       )(PostFormInput.apply)(PostFormInput.unapply)
     )
   }

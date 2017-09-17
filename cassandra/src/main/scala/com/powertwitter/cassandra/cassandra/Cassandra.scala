@@ -1,6 +1,6 @@
 package com.powertwitter.cassandra.cassandra
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.cassandra.scaladsl.{CassandraSink, CassandraSource}
@@ -8,20 +8,29 @@ import akka.stream.scaladsl.{Sink, Source}
 import com.datastax.driver.core.{Cluster, PreparedStatement, SimpleStatement}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object Cassandra {
   implicit val session = Cluster.builder.addContactPoint("127.0.0.1").withPort(9042).build.connect()
 
 }
 
-class Cassandra(implicit system : ActorSystem) {
+class Cassandra(implicit system : ActorSystem,
+                implicit val mat : ActorMaterializer) {
 
   import Cassandra._
 
-  implicit val mat = ActorMaterializer()
-
   def insert() = {
 
+    val sink: Sink[String, Future[Done]] = sinkInsert
+
+    //val source = Source(Vector(1, 2, 3))
+    val source: Source[String, NotUsed] = Source( Vector("cuatro", "cinco", "seis") )
+    source.runWith( sink )
+
+  }
+
+  def sinkInsert() = {
     val preparedStatement =
       session.prepare("INSERT INTO Twitter.tweet(id, tweet) VALUES (now(), ?)")
 
@@ -30,14 +39,8 @@ class Cassandra(implicit system : ActorSystem) {
         statement.bind(tweet)
       }
 
-    val sink = CassandraSink[String](parallelism = 2,
+    CassandraSink[String](parallelism = 2,
       preparedStatement, statementBinder)
-
-    //val source = Source(Vector(1, 2, 3))
-
-    val source: Source[String, NotUsed] = Source( Vector("cuatro", "cinco", "seis") )
-
-    source.runWith( sink )
 
   }
 

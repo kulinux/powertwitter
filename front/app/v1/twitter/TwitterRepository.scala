@@ -9,19 +9,7 @@ import rabbitmq.RabbitActor
 
 import scala.concurrent.Future
 
-final case class TwitterData(id: TwitterId, tweet: String, metadata: String)
-
-class TwitterId private(val underlying: Int) extends AnyVal {
-  override def toString: String = underlying.toString
-}
-
-object TwitterId {
-  def apply(raw: String): TwitterId = {
-    require(raw != null)
-    new TwitterId(Integer.parseInt(raw))
-  }
-}
-
+import com.powertwitter.model._
 
 class PostExecutionContext @Inject()(actorSystem: ActorSystem) extends CustomExecutionContext(actorSystem, "repository.dispatcher")
 
@@ -75,6 +63,7 @@ class TwitterRepositoryImpl @Inject()()(implicit ec: PostExecutionContext) exten
 
   def create(data: TwitterData)(implicit mc: MarkerContext): Future[TwitterId] = {
     Future {
+      println("*********** create *****************")
       logger.trace(s"create: data = $data")
       rb ! data
       data.id

@@ -16,6 +16,8 @@ libraryDependencies += "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.1
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.0.0-M3" % Test
 libraryDependencies += "io.gatling.highcharts" % "gatling-charts-highcharts" % "2.2.2" % Test
 libraryDependencies += "io.gatling" % "gatling-test-framework" % "2.2.2" % Test
+libraryDependencies += "com.powertwitter" %% "model" % "0.1.0-SNAPSHOT"
+
 
 
 
