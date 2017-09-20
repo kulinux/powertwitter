@@ -6,6 +6,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.alpakka.cassandra.scaladsl.{CassandraSink, CassandraSource}
 import akka.stream.scaladsl.{Sink, Source}
 import com.datastax.driver.core.{Cluster, PreparedStatement, SimpleStatement}
+import com.powertwitter.model.TwitterData
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -44,6 +45,26 @@ class Cassandra(implicit system : ActorSystem,
 
   }
 
+  def sinkInsertTweet() = {
+    val preparedStatement =
+      session.prepare(
+        """
+          |INSERT INTO Twitter.tweet(id, tweet, metadata)
+          |VALUES (now(), ?, ?)
+          |""".stripMargin)
+
+    val statementBinder =
+      (tweet: TwitterData, statement: PreparedStatement) => {
+        statement
+          .bind(tweet.tweet)
+          .bind(tweet.metadata)
+      }
+
+    CassandraSink[TwitterData](parallelism = 2,
+      preparedStatement, statementBinder)
+
+  }
+
   def initSchema() = {
     session.execute(
       """
@@ -54,7 +75,7 @@ class Cassandra(implicit system : ActorSystem,
     session.execute(
       """
     |CREATE TABLE IF NOT EXISTS Twitter.tweet
-    |(id uuid PRIMARY KEY, tweet text);
+    |(id uuid PRIMARY KEY, tweet text, metadata text);
       """.stripMargin)
 
   }

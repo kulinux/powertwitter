@@ -6,6 +6,8 @@ import akka.stream.alpakka.amqp._
 import akka.stream.alpakka.amqp.scaladsl.{AmqpSink, AmqpSource}
 import akka.stream.scaladsl.Sink
 import com.powertwitter.cassandra.cassandra.Cassandra
+import com.powertwitter.model.TwitterData
+import play.api.libs.json.{JsValue, Json}
 
 
 object RabbitCassandraActor {
@@ -37,7 +39,7 @@ class RabbitCassandraActor extends Actor {
 
     cassandra.initSchema()
 
-    val cassandraSink = cassandra.sinkInsert()
+    val cassandraSink = cassandra.sinkInsertTweet()
 
     val done = AmqpSource(
         TemporaryQueueSourceSettings(
@@ -46,10 +48,16 @@ class RabbitCassandraActor extends Actor {
         ).withDeclarations(exchangeDeclaration),
         bufferSize = 1
     ).map( x => x.bytes.utf8String )
+    .map( mapToTwitterData )
     .runWith( cassandraSink )
       //.runWith(Sink.foreach( x => println(x.bytes.utf8String) ) )
 
   }
+
+  def mapToTwitterData(str : String): TwitterData = {
+    TwitterData.implicitReads.reads( Json.parse( str )).get
+  }
+
 
 
   def receive = {

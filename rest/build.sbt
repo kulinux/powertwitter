@@ -9,6 +9,9 @@ scalaVersion := "2.12.3"
 
 libraryDependencies += guice
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+libraryDependencies += "com.lightbend.akka" %% "akka-stream-alpakka-amqp" % "0.10"
+libraryDependencies += "com.powertwitter" %% "model" % "0.1.0-SNAPSHOT"
+
 
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.powertwitter.controllers._"
