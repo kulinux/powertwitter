@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {Http, Response} from '@angular/http';
+import {Http, Response, Headers} from '@angular/http';
 
 @Component({
   selector: 'app-put',
@@ -19,10 +19,15 @@ export class PutComponent implements OnInit {
   }
 
   makeRequest(form) {
-    console.log(form)
-  	this.http.post(
-  		'http://localhost:9000/v1/posts',
-  		JSON.stringify(form)
+    console.log(form);
+
+    let header = new Headers({'Content-Type': 'application/json'});
+
+
+  	this.http.put(
+  		'http://localhost:9000/tweets',
+  		JSON.stringify(form),
+      {headers: header}
   	)
   	.subscribe((res: Response) => {
   		//this.data = res.json();
