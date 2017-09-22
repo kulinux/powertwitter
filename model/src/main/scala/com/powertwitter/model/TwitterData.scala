@@ -16,10 +16,10 @@ object TwitterData {
   }
 
   implicit val implicitReads: Reads[TwitterData] = (
-    (JsPath \ "id").read[String] and
+    (JsPath \ "id").read[Int] and
       (JsPath \ "tweet").read[String] and
       (JsPath \ "metadata").read[String]
-    )((x, y, z) => TwitterData(TwitterId(x), y, z) )
+    )((x, y, z) => TwitterData(TwitterId(x.toString), y, z) )
 }
 
 final case class TwitterData(id: TwitterId, tweet: String, metadata: String)
@@ -33,4 +33,14 @@ object TwitterId {
     require(raw != null)
     new TwitterId(Integer.parseInt(raw))
   }
+}
+object TestTwitterData extends App {
+  val td = TwitterData(TwitterId("444"), "tweet", "metadata")
+
+  val res = TwitterData.implicitWrites.writes(td)
+
+  val js = TwitterData.implicitReads.reads(res)
+
+  println(res)
+  println(js.get)
 }

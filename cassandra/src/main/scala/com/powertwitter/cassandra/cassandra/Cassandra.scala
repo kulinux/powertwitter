@@ -56,8 +56,7 @@ class Cassandra(implicit system : ActorSystem,
     val statementBinder =
       (tweet: TwitterData, statement: PreparedStatement) => {
         statement
-          .bind(tweet.tweet)
-          .bind(tweet.metadata)
+          .bind(tweet.tweet, tweet.metadata)
       }
 
     CassandraSink[TwitterData](parallelism = 2,

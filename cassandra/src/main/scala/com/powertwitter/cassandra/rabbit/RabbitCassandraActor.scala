@@ -8,6 +8,7 @@ import akka.stream.scaladsl.Sink
 import com.powertwitter.cassandra.cassandra.Cassandra
 import com.powertwitter.model.TwitterData
 import play.api.libs.json.{JsValue, Json}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object RabbitCassandraActor {
@@ -52,10 +53,18 @@ class RabbitCassandraActor extends Actor {
     .runWith( cassandraSink )
       //.runWith(Sink.foreach( x => println(x.bytes.utf8String) ) )
 
+    done.failed.onComplete( x => x.get.printStackTrace() )
+    done.onComplete( println )
+
+
+    println( done )
+
   }
 
   def mapToTwitterData(str : String): TwitterData = {
-    TwitterData.implicitReads.reads( Json.parse( str )).get
+    val js = Json.parse(str)
+    val tw = TwitterData.implicitReads.reads(js)
+    tw.get
   }
 
 

@@ -1,9 +1,8 @@
-
 name := "powertwitter-cassandra"
 
 version := "1.0"
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
 
 lazy val akkaVersion = "2.5.3"
 
@@ -15,3 +14,5 @@ libraryDependencies ++= Seq(
   "com.lightbend.akka" %% "akka-stream-alpakka-cassandra" % "0.11",
   "com.powertwitter" %% "model" % "0.1.0-SNAPSHOT"
 )
+
+mainClass in (Compile, run) := Some("com.powertwitter.cassandra.rabbit.MainConsumer")
