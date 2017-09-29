@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.cassandra.scaladsl.{CassandraSink, CassandraSource}
 import akka.stream.scaladsl.{Sink, Source}
-import com.datastax.driver.core.{Cluster, PreparedStatement, SimpleStatement}
+import com.datastax.driver.core.{Cluster, PreparedStatement, Row, SimpleStatement}
 import com.powertwitter.model.TwitterData
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,31 +21,17 @@ class Cassandra(implicit system : ActorSystem,
 
   import Cassandra._
 
+  def select() = {
+    val stmt = new SimpleStatement("SELECT * FROM Twitter.tweet")
+      .setFetchSize(20)
+
+    CassandraSource(stmt)
+      .map( mapSelect _ )
+
+  }
+
+
   def insert() = {
-
-    val sink: Sink[String, Future[Done]] = sinkInsert
-
-    //val source = Source(Vector(1, 2, 3))
-    val source: Source[String, NotUsed] = Source( Vector("cuatro", "cinco", "seis") )
-    source.runWith( sink )
-
-  }
-
-  def sinkInsert() = {
-    val preparedStatement =
-      session.prepare("INSERT INTO Twitter.tweet(id, tweet) VALUES (now(), ?)")
-
-    val statementBinder =
-      (tweet: String, statement: PreparedStatement) => {
-        statement.bind(tweet)
-      }
-
-    CassandraSink[String](parallelism = 2,
-      preparedStatement, statementBinder)
-
-  }
-
-  def sinkInsertTweet() = {
     val preparedStatement =
       session.prepare(
         """
@@ -79,16 +65,13 @@ class Cassandra(implicit system : ActorSystem,
 
   }
 
-  def test() = {
-    val stmt = new SimpleStatement("SELECT * FROM Twitter.tweet")
-      .setFetchSize(20)
 
-    val rows = CassandraSource(stmt).runWith(Sink.seq)
 
-    rows.onComplete(
-      y => y.foreach( u => u.foreach(println) )
-    )
+
+  def mapSelect(r : Row): TwitterData = {
+    TwitterData( r.getObject("id").toString,
+                  r.getString("tweet"),
+                  r.getString("metadata"))
   }
-
 
 }

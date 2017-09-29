@@ -14,7 +14,7 @@ object  MainCassandra extends App {
   val cass = new Cassandra()
 
   cass.initSchema()
-  cass.insert().onComplete( x => cass.test() )
+  //cass.insert().onComplete( x => cass.test() )
 
 
 

@@ -11,22 +11,18 @@ import rabbitmq.RabbitActor
 import com.powertwitter.model._
 
 @Singleton
-class TwitterController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
-
-  implicit val system = ActorSystem.create("system")
-  val rb = system.actorOf(Props[RabbitActor])
+class TwitterController @Inject()(boot: Boot, cc: ControllerComponents) extends AbstractController(cc) {
 
   import Tweet._
 
-  def index() = Action { implicit request: Request[AnyContent] =>
-    val tweets = Seq( Tweet("uno", "metadata"), Tweet("dos", "metadata"))
-    Ok(Json.toJson( tweets ) )
+  def all() = Action { implicit request: Request[AnyContent] =>
+    ???
   }
 
   def put() = Action(parse.json) { request =>
     val tweet = request.body.as[Tweet]
-    val tweetData = new TwitterData(TwitterId("-1"), tweet.tweet, tweet.metadata)
-    rb ! tweetData
+    val tweetData = new TwitterData("-1", tweet.tweet, tweet.metadata)
+    boot.rb ! tweetData
     Ok(Json.toJson( tweet ))
   }
 
