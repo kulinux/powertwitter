@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.amqp._
 import akka.stream.alpakka.amqp.scaladsl.{AmqpSink, AmqpSource}
+import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import com.powertwitter.cassandra.cassandra.Cassandra
 import com.powertwitter.model.TwitterData
@@ -13,13 +14,20 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 
 object RabbitCassandraActor {
-  val exchangeNameSelect = "powertwitter_select"
-  val exchangeNameInsert = "powertwitter_insert"
+  val ExchangeNameSelect = "powertwitter_select"
+  val ExchangeNameInsert = "powertwitter_insert"
 
-  val exchangeDeclarationInsert = ExchangeDeclaration(exchangeNameInsert, "fanout")
-  val exchangeDeclarationSelect = ExchangeDeclaration(exchangeNameSelect, "fanout")
+  val ExchangeDeclarationInsert = ExchangeDeclaration(ExchangeNameInsert, "fanout")
+  val ExchangeDeclarationSelect = ExchangeDeclaration(ExchangeNameSelect, "fanout")
 
   def props(): Props = Props(new RabbitCassandraActor())
+
+  def mapToTwitterData(str : String): TwitterData = {
+    val js = Json.parse(str)
+    val tw = TwitterData.implicitReads.reads(js)
+    tw.get
+  }
+
 }
 
 class RabbitCassandraActor extends Actor {
@@ -37,13 +45,13 @@ class RabbitCassandraActor extends Actor {
 
   val amqpSink = AmqpSink.simple(
     AmqpSinkSettings(connectionSettings).
-      withDeclarations(exchangeDeclarationInsert)
+      withDeclarations(ExchangeDeclarationInsert)
   )
 
   val amqpSelect = AmqpSink.simple(
     AmqpSinkSettings(connectionSettings)
-      .withExchange(exchangeNameSelect)
-      .withDeclarations(exchangeDeclarationSelect)
+      .withExchange(ExchangeNameSelect)
+      .withDeclarations(ExchangeDeclarationSelect)
   )
 
 
@@ -56,8 +64,8 @@ class RabbitCassandraActor extends Actor {
     val done = AmqpSource(
         TemporaryQueueSourceSettings(
           DefaultAmqpConnection,
-          exchangeNameInsert
-        ).withDeclarations(exchangeDeclarationInsert),
+          ExchangeNameInsert
+        ).withDeclarations(ExchangeDeclarationInsert),
         bufferSize = 1
     ).map( x => x.bytes.utf8String )
     .map( mapToTwitterData )
@@ -72,6 +80,10 @@ class RabbitCassandraActor extends Actor {
 
   def fromCassandraToRabbit() = {
 
+    Source(Vector(""))
+      .map(s => ByteString(s))
+      .runWith( amqpSelect )
+
     val done = cassandra.select()
       .map( TwitterData.implicitWrites.writes _ )
       .map( Json.stringify _ )
@@ -80,12 +92,6 @@ class RabbitCassandraActor extends Actor {
 
     done.onComplete( x => println(s"read $x") )
 
-  }
-
-  def mapToTwitterData(str : String): TwitterData = {
-    val js = Json.parse(str)
-    val tw = TwitterData.implicitReads.reads(js)
-    tw.get
   }
 
 
@@ -106,7 +112,7 @@ class RabbitCassandraActor extends Actor {
 }
 
 
-object MainConsumer extends App {
+object MainCassandra extends App {
   implicit val system = ActorSystem.create("system")
   val rb = system.actorOf(RabbitCassandraActor.props())
 }

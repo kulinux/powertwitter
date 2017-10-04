@@ -14,6 +14,12 @@ import scala.concurrent.Future
 object Cassandra {
   implicit val session = Cluster.builder.addContactPoint("127.0.0.1").withPort(9042).build.connect()
 
+  def mapSelect(r : Row): TwitterData = {
+    TwitterData( r.getObject("id").toString,
+      r.getString("tweet"),
+      r.getString("metadata"))
+  }
+
 }
 
 class Cassandra(implicit system : ActorSystem,
@@ -63,15 +69,6 @@ class Cassandra(implicit system : ActorSystem,
     |(id uuid PRIMARY KEY, tweet text, metadata text);
       """.stripMargin)
 
-  }
-
-
-
-
-  def mapSelect(r : Row): TwitterData = {
-    TwitterData( r.getObject("id").toString,
-                  r.getString("tweet"),
-                  r.getString("metadata"))
   }
 
 }
