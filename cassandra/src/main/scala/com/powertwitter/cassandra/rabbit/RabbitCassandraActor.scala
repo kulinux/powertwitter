@@ -74,6 +74,8 @@ class RabbitCassandraActor extends Actor {
     done.failed.onComplete( x => x.get.printStackTrace() )
     done.onComplete( println )
 
+    fromCassandraToRabbit()
+
     println( done )
 
   }

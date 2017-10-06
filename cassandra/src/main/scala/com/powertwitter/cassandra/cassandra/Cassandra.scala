@@ -27,6 +27,8 @@ class Cassandra(implicit system : ActorSystem,
 
   import Cassandra._
 
+  initSchema();
+
   def select() = {
     val stmt = new SimpleStatement("SELECT * FROM Twitter.tweet")
       .setFetchSize(20)
