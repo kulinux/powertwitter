@@ -1,12 +1,14 @@
 package rabbitmq
 
-import akka.actor.{Actor, ActorSystem, Props}
+import java.util.Date
+
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.amqp.scaladsl.{AmqpSink, AmqpSource}
 import akka.stream.alpakka.amqp._
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.{ByteString, Timeout}
-import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.json.{JsResult, JsValue, Json, Writes}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import com.powertwitter.model._
@@ -24,6 +26,8 @@ object RabbitActor {
   val ExchangeNameInsert = "powertwitter_insert"
   val ExchangeDeclarationInsert = ExchangeDeclaration(ExchangeNameInsert, "fanout")
   val ExchangeDeclarationSelect = ExchangeDeclaration(ExchangeNameSelect, "fanout")
+
+  case class SubscribeMe(actorRef: ActorRef)
 }
 
 
@@ -32,6 +36,7 @@ class RabbitActor extends Actor {
   import com.powertwitter.model.TwitterData._
 
   var all = ListBuffer[TwitterData]()
+  var actors = List[ActorRef]()
 
   implicit val Timeout: Timeout = 4 seconds
 
@@ -39,13 +44,17 @@ class RabbitActor extends Actor {
   override def receive = {
     case td : TwitterData => sendTwitterData(td)
     case "ALL" => sender ? all
+    case SubscribeMe( me ) => {
+        actors = me :: actors
+        sender() ! new Date()
+        receiveFromRabbit(me)
+    }
     case _ => ???
 
   }
 
   override def preStart(): Unit = {
     super.preStart()
-    this.receiveFromRabbit()
   }
 
   implicit val materializer = ActorMaterializer()
@@ -67,7 +76,7 @@ class RabbitActor extends Actor {
     done.onComplete( f => println("finised " + f))
   }
 
-  def receiveFromRabbit(): Unit = {
+  def receiveFromRabbit( resActor : ActorRef ): Unit = {
     val done = AmqpSource(
       TemporaryQueueSourceSettings(
         DefaultAmqpConnection,
@@ -78,8 +87,13 @@ class RabbitActor extends Actor {
       .map( x => if(x.length == 0) {all.clear(); Json.parse("{}")} else Json.parse(x) )
       .map( TwitterData.implicitReads.reads )
       .filter( x => x.isSuccess )
-    .runForeach( x => all += x.get )
+    .runForeach( x => returnToActor(resActor, x) )
 
-    done.onComplete( println )
   }
+
+  def returnToActor(ar : ActorRef, js: JsResult[TwitterData]): Unit = {
+    val kk = js.get
+   ar ! js.get
+  }
+
 }

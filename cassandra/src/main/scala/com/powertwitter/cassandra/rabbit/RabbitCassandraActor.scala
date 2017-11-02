@@ -71,8 +71,8 @@ class RabbitCassandraActor extends Actor {
     .map( mapToTwitterData )
     .runWith( cassandraSink )
 
-    done.failed.onComplete( x => x.get.printStackTrace() )
-    done.onComplete( println )
+    //done.failed.onComplete( x => x.get.printStackTrace() )
+    //done.onComplete( println )
 
     fromCassandraToRabbit()
 
@@ -92,7 +92,7 @@ class RabbitCassandraActor extends Actor {
       .map(s => ByteString(s))
       .runWith( amqpSelect )
 
-    done.onComplete( x => println(s"read $x") )
+    //done.onComplete( x => println(s"read $x") )
 
   }
 
