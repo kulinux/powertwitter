@@ -24,8 +24,10 @@ import scala.collection.mutable.ListBuffer
 object RabbitActor {
   val ExchangeNameSelect = "powertwitter_select"
   val ExchangeNameInsert = "powertwitter_insert"
+  val ExchangeNameSelectUpdates = "powertwitter_select_updates"
   val ExchangeDeclarationInsert = ExchangeDeclaration(ExchangeNameInsert, "fanout")
   val ExchangeDeclarationSelect = ExchangeDeclaration(ExchangeNameSelect, "fanout")
+  val ExchangeDeclarationSelectUpdates = ExchangeDeclaration(ExchangeNameSelectUpdates, "fanout")
 
   case class SubscribeMe(actorRef: ActorRef)
 }
@@ -46,7 +48,6 @@ class RabbitActor extends Actor {
     case "ALL" => sender ? all
     case SubscribeMe( me ) => {
         actors = me :: actors
-        sender() ! new Date()
         receiveFromRabbit(me)
     }
     case _ => ???
@@ -77,13 +78,26 @@ class RabbitActor extends Actor {
   }
 
   def receiveFromRabbit( resActor : ActorRef ): Unit = {
-    val done = AmqpSource(
+
+    val sourceAll = AmqpSource(
       TemporaryQueueSourceSettings(
         DefaultAmqpConnection,
         ExchangeNameSelect
-      ).withDeclarations(ExchangeDeclarationSelect),
-      bufferSize = 1
-    ).map( x => x.bytes.utf8String )
+    ).withDeclarations(ExchangeDeclarationSelect),
+    bufferSize = 1 )
+
+    val sourceUpdate = AmqpSource(
+      TemporaryQueueSourceSettings(
+        DefaultAmqpConnection,
+        ExchangeNameSelectUpdates
+      ).withDeclarations(ExchangeDeclarationSelectUpdates),
+      bufferSize = 1 )
+
+    val sources = sourceAll ++ sourceUpdate
+
+
+    val done =
+      sources.map( x => x.bytes.utf8String )
       .map( x => if(x.length == 0) {all.clear(); Json.parse("{}")} else Json.parse(x) )
       .map( TwitterData.implicitReads.reads )
       .filter( x => x.isSuccess )
@@ -92,8 +106,7 @@ class RabbitActor extends Actor {
   }
 
   def returnToActor(ar : ActorRef, js: JsResult[TwitterData]): Unit = {
-    val kk = js.get
-   ar ! js.get
+    ar ! js.get
   }
 
 }

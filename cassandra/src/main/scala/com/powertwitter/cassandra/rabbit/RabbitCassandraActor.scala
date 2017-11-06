@@ -1,5 +1,6 @@
 package com.powertwitter.cassandra.rabbit
 
+import akka.Done
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.amqp._
@@ -11,14 +12,20 @@ import com.powertwitter.model.TwitterData
 import play.api.libs.json.{JsValue, Json}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
+import akka.stream.scaladsl.Sink
+
+import scala.concurrent.Future
 
 
 object RabbitCassandraActor {
-  val ExchangeNameSelect = "powertwitter_select"
+  val ExchangeNameSelectAll = "powertwitter_select"
+  val ExchangeNameSelectUpdates = "powertwitter_select_updates"
   val ExchangeNameInsert = "powertwitter_insert"
 
   val ExchangeDeclarationInsert = ExchangeDeclaration(ExchangeNameInsert, "fanout")
-  val ExchangeDeclarationSelect = ExchangeDeclaration(ExchangeNameSelect, "fanout")
+  val ExchangeDeclarationSelectAll = ExchangeDeclaration(ExchangeNameSelectAll, "fanout")
+  val ExchangeDeclarationSelectUpdates = ExchangeDeclaration(ExchangeNameSelectUpdates, "fanout")
 
   def props(): Props = Props(new RabbitCassandraActor())
 
@@ -50,9 +57,16 @@ class RabbitCassandraActor extends Actor {
 
   val amqpSelect = AmqpSink.simple(
     AmqpSinkSettings(connectionSettings)
-      .withExchange(ExchangeNameSelect)
-      .withDeclarations(ExchangeDeclarationSelect)
+      .withExchange(ExchangeNameSelectAll)
+      .withDeclarations(ExchangeDeclarationSelectAll)
   )
+
+  val amqpSelectUpdates = AmqpSink.simple(
+    AmqpSinkSettings(connectionSettings)
+      .withExchange(ExchangeNameSelectUpdates)
+      .withDeclarations(ExchangeDeclarationSelectUpdates)
+  )
+
 
 
   def fromRabbitToCassandra(): Unit =  {
@@ -61,15 +75,18 @@ class RabbitCassandraActor extends Actor {
 
     val cassandraSink = cassandra.insert()
 
+
     val done = AmqpSource(
         TemporaryQueueSourceSettings(
           DefaultAmqpConnection,
           ExchangeNameInsert
         ).withDeclarations(ExchangeDeclarationInsert),
         bufferSize = 1
-    ).map( x => x.bytes.utf8String )
+    )
+    .map( x => { toUpdateSelect(x); x } )
+    .map( x => x.bytes.utf8String )
     .map( mapToTwitterData )
-    .runWith( cassandraSink )
+    .runWith( cassandraSink)
 
     //done.failed.onComplete( x => x.get.printStackTrace() )
     //done.onComplete( println )
@@ -79,6 +96,14 @@ class RabbitCassandraActor extends Actor {
     println( done )
 
   }
+
+  def toUpdateSelect( x : IncomingMessage ): Unit =
+  {
+    Source( x.bytes )
+        .map( x => ByteString(x) )
+        .runWith( amqpSelectUpdates )
+  }
+
 
   def fromCassandraToRabbit() = {
 
@@ -107,7 +132,6 @@ class RabbitCassandraActor extends Actor {
 
     import scala.concurrent.duration._
     self ! "FROM_RABBIT_TO_CASSANDRA"
-    self ! "FROM_CASSANDRA_TO_RABBIT"
 
     system.scheduler.schedule(1 seconds, 10 seconds, self, "FROM_CASSANDRA_TO_RABBIT")
   }

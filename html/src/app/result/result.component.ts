@@ -1,13 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
-import { WebsocketService } from '../websocket.service';
+import { WebsocketService, TwitterData } from '../websocket.service';
 
-export interface TwitterData {
-  id: string;
-  tweet: string;
-  metadata: string
-}
 
 @Component({
   selector: 'app-result',
@@ -17,7 +12,15 @@ export interface TwitterData {
 export class ResultComponent implements OnInit {
 
 
+  searchResult : Array<TwitterData> = [];
+
+
   constructor(wsService: WebsocketService) {
+    wsService.subject.subscribe( x => {
+      console.log(x)
+      this.searchResult.push( x );
+    }
+    );
   }
 
   ngOnInit() {
